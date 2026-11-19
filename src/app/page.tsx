@@ -3,19 +3,33 @@
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { SimulatorDashboard } from "@/components/SimulatorDashboard";
-import { CurrencyCode } from "@/types/finance";
-import { Sparkles, BookOpen, ArrowRight, ShieldCheck } from "lucide-react";
+import { AICopilotTab } from "@/components/AICopilotTab";
+import { CurrencyCode, HustleInputs } from "@/types/finance";
+import { calculateFinancials } from "@/lib/cfo-math";
+import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
+import { BookOpen, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const [currency, setCurrency] = useState<CurrencyCode>("HKD");
   const [activeTab, setActiveTab] = useState<"simulator" | "ai" | "ledger">("simulator");
+
+  // Shared Hustle State across all tabs
+  const [inputs, setInputs] = useState<HustleInputs>({
+    ...STUDENT_HUSTLE_PRESETS[0].defaultInputs,
+    currency,
+  });
+
+  const analysis = calculateFinancials({ ...inputs, currency });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Navigation Header */}
       <Navbar
         currency={currency}
-        onCurrencyChange={setCurrency}
+        onCurrencyChange={(newCurr) => {
+          setCurrency(newCurr);
+          setInputs((prev) => ({ ...prev, currency: newCurr }));
+        }}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
@@ -30,36 +44,14 @@ export default function Home() {
         )}
 
         {activeTab === "ai" && (
-          <div className="py-12 max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Coming in Phase 4 • Multimodal Gemini Copilot</span>
-            </div>
-            <h2 className="text-3xl font-extrabold text-white">
-              AI Risk Stress-Tester & Receipt Scanner
-            </h2>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto">
-              Feed your side-hustle model to Gemini 2.0 / Flash. It acts as an aggressive VC/CFO pointing out hidden costs, delivery pitfalls, and seasonal student dips.
-            </p>
-            <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-left max-w-md mx-auto space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Planned Phase 4 Capabilities:</span>
-              </div>
-              <ul className="text-xs text-slate-400 space-y-2 list-disc list-inside">
-                <li>Automated risk stress-testing via `@google/genai`</li>
-                <li>Receipt photo OCR into structured expense line-items</li>
-                <li>Free tier API key guidance & mock fallback mode</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => setActiveTab("simulator")}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition-colors"
-            >
-              <span>Back to Interactive Simulator</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <AICopilotTab
+            inputs={inputs}
+            analysis={analysis}
+            currency={currency}
+            onAddTransactionFromReceipt={(scan) => {
+              setActiveTab("ledger");
+            }}
+          />
         )}
 
         {activeTab === "ledger" && (
