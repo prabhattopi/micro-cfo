@@ -133,7 +133,7 @@ export function AICopilotTab({
               <Sparkles className="w-4 h-4" />
             </span>
             <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
-              Powered by Google Gemini 2.0 / Flash
+              Powered by Google Gemini 3.8 / Flash-lite
             </span>
           </div>
           <h2 className="text-2xl font-extrabold text-white">

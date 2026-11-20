@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const apiKey = clientApiKey || process.env.GEMINI_API_KEY || "";
-    const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+    const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash-lite";
 
     // If no API key is provided, return high-quality contextual mock data
     if (!apiKey || apiKey === "your_gemini_api_key_here") {
@@ -104,7 +104,7 @@ Give an aggressive, realistic CFO evaluation in JSON.`;
       getFallbackAnalysis(
         body?.inputs || { name: "Campus Hustle", currency: "HKD" },
         body?.analysis || { monthlyNetProfit: 500, unitContributionMargin: 25 },
-        "gemini-2.0-flash (Simulated Fallback)"
+        "gemini-3.8-flash-lite (Simulated Fallback)"
       )
     );
   }

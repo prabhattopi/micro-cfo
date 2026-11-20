@@ -14,6 +14,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"simulator" | "ai" | "ledger">("simulator");
 
   // Shared Hustle State across all tabs
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>("campus-bakery");
   const [inputs, setInputs] = useState<HustleInputs>({
     ...STUDENT_HUSTLE_PRESETS[0].defaultInputs,
     currency,
@@ -38,6 +39,10 @@ export default function Home() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-6">
         {activeTab === "simulator" && (
           <SimulatorDashboard
+            inputs={inputs}
+            setInputs={setInputs}
+            selectedPresetId={selectedPresetId}
+            setSelectedPresetId={setSelectedPresetId}
             currency={currency}
             onNavigateToAI={() => setActiveTab("ai")}
           />

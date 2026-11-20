@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const apiKey = clientApiKey || process.env.GEMINI_API_KEY || "";
-    const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+    const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash-lite";
 
     // If no API key or sample mode, return realistic sample parse
     if (!apiKey || apiKey === "your_gemini_api_key_here" || !imageBase64) {

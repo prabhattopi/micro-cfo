@@ -23,21 +23,22 @@ import {
 } from "lucide-react";
 
 interface SimulatorDashboardProps {
+  inputs: HustleInputs;
+  setInputs: React.Dispatch<React.SetStateAction<HustleInputs>>;
+  selectedPresetId: string | null;
+  setSelectedPresetId: (id: string | null) => void;
   currency: CurrencyCode;
   onNavigateToAI: () => void;
 }
 
 export function SimulatorDashboard({
+  inputs,
+  setInputs,
+  selectedPresetId,
+  setSelectedPresetId,
   currency,
   onNavigateToAI,
 }: SimulatorDashboardProps) {
-  // Start with Campus Bakery preset
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>("campus-bakery");
-  const [inputs, setInputs] = useState<HustleInputs>({
-    ...STUDENT_HUSTLE_PRESETS[0].defaultInputs,
-    currency,
-  });
-
   const analysis = calculateFinancials({ ...inputs, currency });
   const campusWageBenchmark = MIN_HOURLY_WAGE_BENCHMARKS[currency] || 15.0;
 
