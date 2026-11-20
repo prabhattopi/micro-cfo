@@ -9,6 +9,7 @@ import { PresetSelector } from "@/components/PresetSelector";
 import { MetricCard } from "@/components/MetricCard";
 import { BreakEvenBar } from "@/components/BreakEvenBar";
 import { SensitivityTable } from "@/components/SensitivityTable";
+import { CustomIdeaModal } from "@/components/CustomIdeaModal";
 import {
   DollarSign,
   TrendingUp,
@@ -20,6 +21,7 @@ import {
   Layers,
   Award,
   Sparkles,
+  Edit2,
 } from "lucide-react";
 
 interface SimulatorDashboardProps {
@@ -39,6 +41,9 @@ export function SimulatorDashboard({
   currency,
   onNavigateToAI,
 }: SimulatorDashboardProps) {
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   const analysis = calculateFinancials({ ...inputs, currency });
   const campusWageBenchmark = MIN_HOURLY_WAGE_BENCHMARKS[currency] || 15.0;
 
@@ -52,20 +57,12 @@ export function SimulatorDashboard({
   };
 
   const handleCustomHustle = () => {
+    setIsCustomModalOpen(true);
+  };
+
+  const handleApplyBlueprint = (blueprint: HustleInputs) => {
     setSelectedPresetId("custom");
-    setInputs({
-      name: "My Custom Side-Hustle",
-      category: "General Campus Hustle",
-      currency,
-      sellingPrice: 100,
-      variableCostPerUnit: 35,
-      platformFeePercent: 0.04,
-      fixedPaymentFee: 1.0,
-      fixedMonthlyCosts: 200,
-      hoursPerUnit: 1.0,
-      monthlyVolumeTarget: 20,
-      initialCapital: 1000,
-    });
+    setInputs(blueprint);
   };
 
   const updateInput = <K extends keyof HustleInputs>(field: K, value: HustleInputs[K]) => {
@@ -98,19 +95,55 @@ export function SimulatorDashboard({
         onCustomHustle={handleCustomHustle}
       />
 
+      {/* Custom Idea Modal */}
+      <CustomIdeaModal
+        isOpen={isCustomModalOpen}
+        onClose={() => setIsCustomModalOpen(false)}
+        currency={currency}
+        onApplyBlueprint={handleApplyBlueprint}
+      />
+
       {/* 2. Top Executive Summary Banner & Health Score */}
       <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 shadow-2xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                 {inputs.category}
               </span>
               <span className="text-xs text-slate-400">Micro-Business Model</span>
+              <button
+                onClick={() => setIsCustomModalOpen(true)}
+                className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 ml-2 cursor-pointer bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 transition-all hover:bg-emerald-500/20"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>AI Generate Any Idea</span>
+              </button>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {inputs.name}
-            </h2>
+
+            <div className="flex items-center gap-2">
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={inputs.name}
+                  onChange={(e) => updateInput("name", e.target.value)}
+                  onBlur={() => setIsEditingTitle(false)}
+                  onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(false)}
+                  autoFocus
+                  className="text-2xl sm:text-3xl font-extrabold text-white bg-slate-950 border border-emerald-500 px-3 py-1 rounded-xl focus:outline-none"
+                />
+              ) : (
+                <h2
+                  onClick={() => setIsEditingTitle(true)}
+                  className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2 cursor-pointer group hover:text-emerald-300 transition-colors"
+                  title="Click to rename"
+                >
+                  <span>{inputs.name}</span>
+                  <Edit2 className="w-4 h-4 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </h2>
+              )}
+            </div>
+
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
               Targeting {inputs.monthlyVolumeTarget} sales/month at {formatCurrency(inputs.sellingPrice, currency)} per unit.
               Calculated real net profitability and student wage return below.

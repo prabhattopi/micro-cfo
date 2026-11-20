@@ -2,7 +2,7 @@
 
 import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
 import { HustlePreset } from "@/types/finance";
-import { Cookie, Video, Shirt, ShoppingBag, GraduationCap, PlusCircle } from "lucide-react";
+import { Cookie, Video, Shirt, ShoppingBag, GraduationCap, PlusCircle, Sparkles } from "lucide-react";
 
 interface PresetSelectorProps {
   selectedPresetId: string | null;
@@ -70,21 +70,23 @@ export function PresetSelector({
           );
         })}
 
-        {/* Custom Hustle Option */}
+        {/* Custom Hustle Option with AI */}
         <button
           onClick={onCustomHustle}
           className={`text-left p-3 rounded-xl border transition-all flex flex-col justify-between group ${
             selectedPresetId === "custom"
               ? "bg-emerald-500/10 border-emerald-500 text-white ring-1 ring-emerald-500/30"
-              : "bg-slate-900/30 border-dashed border-slate-800 text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
+              : "bg-slate-900/30 border-dashed border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
           }`}
         >
-          <div className="p-1.5 rounded-lg bg-slate-800/80 w-fit mb-2 group-hover:scale-110 transition-transform">
-            <PlusCircle className="w-4 h-4 text-emerald-400" />
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 w-fit mb-2 group-hover:scale-110 transition-transform text-emerald-400">
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-semibold text-xs">Custom Idea</h4>
-            <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">Start blank model</p>
+            <h4 className="font-semibold text-xs text-emerald-300 flex items-center gap-1">
+              <span>AI Custom Idea</span>
+            </h4>
+            <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">Generate with Gemini</p>
           </div>
         </button>
       </div>
