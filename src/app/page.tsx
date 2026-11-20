@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { SimulatorDashboard } from "@/components/SimulatorDashboard";
 import { AICopilotTab } from "@/components/AICopilotTab";
 import { CurrencyCode, HustleInputs } from "@/types/finance";
-import { calculateFinancials } from "@/lib/cfo-math";
+import { calculateFinancials, convertHustleInputs } from "@/lib/cfo-math";
 import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
 import { BookOpen, ArrowRight } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function Home() {
         currency={currency}
         onCurrencyChange={(newCurr) => {
           setCurrency(newCurr);
-          setInputs((prev) => ({ ...prev, currency: newCurr }));
+          setInputs((prev) => convertHustleInputs(prev, newCurr));
         }}
         activeTab={activeTab}
         onTabChange={setActiveTab}

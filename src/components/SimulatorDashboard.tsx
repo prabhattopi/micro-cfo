@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HustleInputs, CurrencyCode, HustlePreset } from "@/types/finance";
-import { calculateFinancials, MIN_HOURLY_WAGE_BENCHMARKS } from "@/lib/cfo-math";
+import { calculateFinancials, MIN_HOURLY_WAGE_BENCHMARKS, convertHustleInputs } from "@/lib/cfo-math";
 import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { PresetSelector } from "@/components/PresetSelector";
@@ -47,13 +47,17 @@ export function SimulatorDashboard({
   const analysis = calculateFinancials({ ...inputs, currency });
   const campusWageBenchmark = MIN_HOURLY_WAGE_BENCHMARKS[currency] || 15.0;
 
+  // Currency-aware dynamic slider bounds
+  const priceMax = currency === "INR" ? 10000 : currency === "HKD" ? 2500 : 350;
+  const priceStep = currency === "INR" ? 25 : currency === "HKD" ? 5 : 0.5;
+  const overheadMax = currency === "INR" ? 25000 : currency === "HKD" ? 5000 : 600;
+  const overheadStep = currency === "INR" ? 100 : currency === "HKD" ? 25 : 5;
+
   // Handle Preset Selection
   const handleSelectPreset = (preset: HustlePreset) => {
     setSelectedPresetId(preset.id);
-    setInputs({
-      ...preset.defaultInputs,
-      currency,
-    });
+    const converted = convertHustleInputs(preset.defaultInputs, currency);
+    setInputs(converted);
   };
 
   const handleCustomHustle = () => {
@@ -93,6 +97,7 @@ export function SimulatorDashboard({
         selectedPresetId={selectedPresetId}
         onSelectPreset={handleSelectPreset}
         onCustomHustle={handleCustomHustle}
+        currency={currency}
       />
 
       {/* Custom Idea Modal */}
@@ -243,9 +248,9 @@ export function SimulatorDashboard({
               </div>
               <input
                 type="range"
-                min="5"
-                max="1000"
-                step="5"
+                min={priceStep}
+                max={Math.max(priceMax, inputs.sellingPrice * 1.5)}
+                step={priceStep}
                 value={inputs.sellingPrice}
                 onChange={(e) => updateInput("sellingPrice", parseFloat(e.target.value) || 0)}
                 className="w-full accent-emerald-500 cursor-pointer"
@@ -264,8 +269,8 @@ export function SimulatorDashboard({
               <input
                 type="range"
                 min="0"
-                max={Math.max(500, inputs.sellingPrice * 1.2)}
-                step="2"
+                max={Math.max(priceMax * 0.8, inputs.sellingPrice * 1.2)}
+                step={priceStep}
                 value={inputs.variableCostPerUnit}
                 onChange={(e) => updateInput("variableCostPerUnit", parseFloat(e.target.value) || 0)}
                 className="w-full accent-rose-500 cursor-pointer"
@@ -302,8 +307,8 @@ export function SimulatorDashboard({
               <input
                 type="range"
                 min="0"
-                max="2000"
-                step="25"
+                max={Math.max(overheadMax, inputs.fixedMonthlyCosts * 1.5)}
+                step={overheadStep}
                 value={inputs.fixedMonthlyCosts}
                 onChange={(e) => updateInput("fixedMonthlyCosts", parseFloat(e.target.value) || 0)}
                 className="w-full accent-amber-500 cursor-pointer"

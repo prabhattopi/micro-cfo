@@ -1,19 +1,23 @@
 "use client";
 
 import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
-import { HustlePreset } from "@/types/finance";
+import { HustlePreset, CurrencyCode } from "@/types/finance";
+import { formatCurrency } from "@/lib/utils";
+import { convertAmount } from "@/lib/cfo-math";
 import { Cookie, Video, Shirt, ShoppingBag, GraduationCap, PlusCircle, Sparkles } from "lucide-react";
 
 interface PresetSelectorProps {
   selectedPresetId: string | null;
   onSelectPreset: (preset: HustlePreset) => void;
   onCustomHustle: () => void;
+  currency: CurrencyCode;
 }
 
 export function PresetSelector({
   selectedPresetId,
   onSelectPreset,
   onCustomHustle,
+  currency,
 }: PresetSelectorProps) {
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -58,8 +62,8 @@ export function PresetSelector({
                 <div className="p-1.5 rounded-lg bg-slate-800/80 group-hover:scale-110 transition-transform">
                   {getIcon(preset.iconName)}
                 </div>
-                <span className="text-[10px] font-mono text-slate-400">
-                  {preset.defaultInputs.currency} ${preset.defaultInputs.sellingPrice}
+                <span className="text-[10px] font-mono text-slate-400 font-semibold">
+                  {formatCurrency(convertAmount(preset.defaultInputs.sellingPrice, preset.defaultInputs.currency, currency), currency)}
                 </span>
               </div>
               <div>

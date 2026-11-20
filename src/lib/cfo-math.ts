@@ -1,4 +1,55 @@
-import type { HustleInputs, FinancialAnalysis, FinancialHealthGrade } from "@/types/finance";
+import type { HustleInputs, FinancialAnalysis, FinancialHealthGrade, CurrencyCode } from "@/types/finance";
+
+// Standard FX exchange rates relative to USD (1 USD = X)
+export const FX_RATES_TO_USD: Record<CurrencyCode, number> = {
+  USD: 1.0,
+  HKD: 7.80,    // 1 USD = 7.80 HKD (Pegged standard)
+  INR: 83.50,   // 1 USD = 83.50 INR
+  EUR: 0.92,    // 1 USD = 0.92 EUR
+  GBP: 0.79,    // 1 USD = 0.79 GBP
+};
+
+/**
+ * Converts any monetary amount from one currency to another using base USD parity.
+ */
+export function convertAmount(amount: number, from: CurrencyCode, to: CurrencyCode): number {
+  if (from === to || amount === 0) return amount;
+  const rateFrom = FX_RATES_TO_USD[from] || 1;
+  const rateTo = FX_RATES_TO_USD[to] || 1;
+
+  // Convert to USD base first, then to target currency
+  const inUSD = amount / rateFrom;
+  const inTarget = inUSD * rateTo;
+
+  if (to === "INR") {
+    // Round cleanly to nearest 5 or 10 in INR
+    return Math.round(inTarget / 5) * 5;
+  }
+  if (to === "HKD") {
+    // Round to nearest 0.5 in HKD
+    return Math.round(inTarget * 2) / 2;
+  }
+  return Math.round(inTarget * 100) / 100;
+}
+
+/**
+ * Converts all monetary fields in a HustleInputs model to target currency while keeping counts/time intact.
+ */
+export function convertHustleInputs(inputs: HustleInputs, targetCurrency: CurrencyCode): HustleInputs {
+  if (inputs.currency === targetCurrency) return inputs;
+  const from = inputs.currency;
+  const to = targetCurrency;
+
+  return {
+    ...inputs,
+    currency: to,
+    sellingPrice: convertAmount(inputs.sellingPrice, from, to),
+    variableCostPerUnit: convertAmount(inputs.variableCostPerUnit, from, to),
+    fixedPaymentFee: convertAmount(inputs.fixedPaymentFee, from, to),
+    fixedMonthlyCosts: convertAmount(inputs.fixedMonthlyCosts, from, to),
+    initialCapital: convertAmount(inputs.initialCapital, from, to),
+  };
+}
 
 // Standard campus student minimum wage benchmarks (for opportunity cost reality check)
 export const MIN_HOURLY_WAGE_BENCHMARKS: Record<string, number> = {
