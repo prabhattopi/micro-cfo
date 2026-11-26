@@ -73,3 +73,16 @@ export interface HustlePreset {
   iconName: string;
   defaultInputs: HustleInputs;
 }
+
+export type TransactionType = "INCOME" | "VARIABLE_EXPENSE" | "FIXED_EXPENSE";
+
+export interface Transaction {
+  id: string;
+  title: string;
+  amount: number;
+  type: TransactionType;
+  category: string;
+  date: string;
+  receiptNote?: string;
+}
+

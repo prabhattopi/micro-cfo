@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { SimulatorDashboard } from "@/components/SimulatorDashboard";
 import { AICopilotTab } from "@/components/AICopilotTab";
-import { CurrencyCode, HustleInputs } from "@/types/finance";
-import { calculateFinancials, convertHustleInputs } from "@/lib/cfo-math";
+import { CashLedgerTab } from "@/components/CashLedgerTab";
+import { CurrencyCode, HustleInputs, Transaction } from "@/types/finance";
+import { calculateFinancials, convertHustleInputs, convertAmount } from "@/lib/cfo-math";
 import { STUDENT_HUSTLE_PRESETS } from "@/data/hustle-presets";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { getSampleTransactions } from "@/data/sample-ledger";
 
 export default function Home() {
   const [currency, setCurrency] = useState<CurrencyCode>("HKD");
@@ -20,7 +21,49 @@ export default function Home() {
     currency,
   });
 
+  // Ledger Transactions State
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("microcfo_transactions");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // fall through
+        }
+      }
+    }
+    return getSampleTransactions("HKD");
+  });
+
+  // Auto-persist transactions
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("microcfo_transactions", JSON.stringify(transactions));
+    }
+  }, [transactions]);
+
   const analysis = calculateFinancials({ ...inputs, currency });
+
+  // Add Transaction Handler
+  const handleAddTransaction = (newTx: Omit<Transaction, "id">) => {
+    const tx: Transaction = {
+      ...newTx,
+      id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    };
+    setTransactions((prev) => [tx, ...prev]);
+  };
+
+  // Delete Transaction Handler
+  const handleDeleteTransaction = (id: string) => {
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Reset / Seed Sample Data
+  const handleSeedSampleData = () => {
+    const seeded = getSampleTransactions(currency);
+    setTransactions(seeded);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
@@ -28,8 +71,16 @@ export default function Home() {
       <Navbar
         currency={currency}
         onCurrencyChange={(newCurr) => {
+          const oldCurr = currency;
           setCurrency(newCurr);
           setInputs((prev) => convertHustleInputs(prev, newCurr));
+          // Also convert existing transaction amounts proportionally
+          setTransactions((prev) =>
+            prev.map((t) => ({
+              ...t,
+              amount: convertAmount(t.amount, oldCurr, newCurr),
+            }))
+          );
         }}
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -54,31 +105,31 @@ export default function Home() {
             analysis={analysis}
             currency={currency}
             onAddTransactionFromReceipt={(scan) => {
+              const newTx: Transaction = {
+                id: `rcpt-${Date.now()}`,
+                title: `${scan.merchantName} (${scan.lineItems.length} items)`,
+                amount: convertAmount(scan.totalAmount, "HKD", currency),
+                type: scan.category,
+                category: scan.category === "VARIABLE_EXPENSE" ? "Raw Materials" : "Equipment",
+                date: scan.date || new Date().toISOString().split("T")[0],
+                receiptNote: "Auto-synced from Gemini Vision Receipt Scanner",
+              };
+              setTransactions((prev) => [newTx, ...prev]);
               setActiveTab("ledger");
             }}
           />
         )}
 
         {activeTab === "ledger" && (
-          <div className="py-12 max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Coming in Phase 5 • Cash-Flow Ledger & Pitch Export</span>
-            </div>
-            <h2 className="text-3xl font-extrabold text-white">
-              Student Side-Hustle Cash Ledger
-            </h2>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto">
-              Track actual real-life cash in and cash out, categorize fixed vs variable expenses, and export a 1-page PDF/Pitch Deck summary for student grants.
-            </p>
-            <button
-              onClick={() => setActiveTab("simulator")}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition-colors"
-            >
-              <span>Back to Interactive Simulator</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <CashLedgerTab
+            transactions={transactions}
+            onAddTransaction={handleAddTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            onSeedSampleData={handleSeedSampleData}
+            currency={currency}
+            inputs={inputs}
+            analysis={analysis}
+          />
         )}
       </main>
 
